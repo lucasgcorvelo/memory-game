@@ -14,10 +14,14 @@ const isBodyParamValid = (body) => (
 const GetCardsController = (req, res) => {
 
   if (!isBodyParamValid(req.body))
-    res.send('numberOfCards property must be a number')
+    res
+    .status(400)
+    .send('numberOfCards property must be a number')
 
   if (!isNumberOfCardsValid(req.body.numberOfCards))
-    res.send('numberOfCards property must be 4,8 or 12')
+    res
+    .status(400)
+    .send('numberOfCards property must be 4,8 or 12')
 
   return res.send(getCardsNumbers(req.body.numberOfCards))
 }
