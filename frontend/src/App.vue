@@ -1,6 +1,9 @@
 <template>
 
 <div class="container">
+
+  <button @click="checkHistory()">HISTORY</button>
+
   <input v-model="numberOfCards" class="type" name="numberOfCards" type="text"
          placeholder="Input a number of cards" />
 
@@ -9,7 +12,7 @@
   <div v-if="isGameRunning">
 
     <div v-for="(card, index) in cards" v-bind:key=index>
-      <Card :cardNumber=card :showCardNumber=showCardsNumber v-on:cardSelected="checkCardSelected"></Card>
+      <Card :cardNumber=card :showCardNumber=showCardsNumber v-on:cardSelected="checkMovement"></Card>
     </div>
 
     <button @click="startGame()">PLAY!</button>
@@ -34,27 +37,37 @@ export default {
     return {
       isGameRunning: false,
       numberOfCards: '',
-      cards: null,
+      cards: [],
       showCardsNumber: true,
-      gameValidationArray: null
+      gameValidationArray: [],
+      gameHistory: []
     }
   },
   methods: {
     setGameMatch,
     startGame,
-    checkCardSelected
+    checkMovement,
+    checkHistory
   }
 }
 
-function checkCardSelected (cardSelected) {
+function checkMovement (cardSelected) {
   const smallerCard = getSmallerCard(this.gameValidationArray)
-  console.log(smallerCard)
+
   if (smallerCard !== cardSelected) {
     this.isGameRunning = false
     this.showCardsNumber = true
+    addGameToHistory(this.gameHistory, false, this.cards)
   } else {
-    this.gameValidationArray.splice(this.gameValidationArray.indexOf(cardSelected), 1)
-    console.log('array', this.gameValidationArray)
+    this.gameValidationArray.splice(
+      this.gameValidationArray.indexOf(cardSelected),
+      1)
+  }
+
+  if (this.gameValidationArray.length === 0) {
+    this.isGameRunning = false
+    this.showCardsNumber = true
+    addGameToHistory(this.gameHistory, true, this.cards)
   }
 }
 
@@ -62,20 +75,32 @@ function getSmallerCard (gameValidationArray) {
   return Math.min.apply( Math, gameValidationArray )
 }
 
+function addGameToHistory (gameHistory, victory, match) {
+  gameHistory.push({
+    date: new Date(),
+    victory,
+    match
+  })
+}
+
+function checkHistory () {
+  console.log(this.gameHistory)
+}
 
 async function setGameMatch () {
-      try {
-        const getCardsResponse = await getCards(this.numberOfCards)
+  try {
+    const getCardsResponse = await getCards(this.numberOfCards)
 
-        this.cards = getCardsResponse.data
-        this.gameValidationArray = [...this.cards]
-        this.isGameRunning = true
+    this.cards = getCardsResponse.data
+    this.gameValidationArray = [...this.cards]
+    this.isGameRunning = true
+    this.numberOfCards = ''
 
-      } catch (err) {
-        this.isGameRunning = false
-        console.log('error', err)
-      }
-    }
+  } catch (err) {
+    this.isGameRunning = false
+    console.log('error', err)
+  }
+}
 
 const getCards = (numberOfCards) => {
 
